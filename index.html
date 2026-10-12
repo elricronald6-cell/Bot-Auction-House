@@ -112,6 +112,31 @@ textarea{resize:vertical;min-height:70px}
   .lp-ticker-item:first-child{border-top:none}
   .lp-num-row{grid-template-columns:1fr;gap:8px}
 }
+
+/* ── BOT Chain ecosystem footer (KPI 5) — auction-house colophon ── */
+.bc-foot{background:var(--lp-bg);border-top:1px solid var(--lp-border);margin-top:80px;padding:56px 24px 34px;font-family:'Inter',-apple-system,'Segoe UI',sans-serif}
+.bc-foot-inner{max-width:920px;margin:0 auto}
+.bc-foot-eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--lp-accent);text-align:center;margin-bottom:22px}
+.bc-foot-mark{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px}
+.bc-foot-mark svg{width:19px;height:30px;display:block;flex-shrink:0}
+.bc-foot-word{font-family:'Playfair Display',Georgia,serif;font-size:27px;font-weight:600;color:var(--lp-text);letter-spacing:0.3px}
+.bc-foot-word em{font-style:italic;color:var(--lp-accent)}
+.bc-foot-motto{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-size:14px;color:var(--lp-text2);text-align:center;margin-bottom:30px}
+.bc-foot-strip{display:flex;border-top:1px solid var(--lp-border);border-bottom:1px solid var(--lp-border);overflow:hidden}
+.bc-foot-cell{flex:1;display:flex;flex-direction:column;gap:5px;padding:16px 22px;border-left:1px solid var(--lp-border);text-decoration:none;transition:background .25s}
+.bc-foot-cell:first-child{border-left:none}
+.bc-foot-cell:hover{background:rgba(217,119,6,0.06)}
+.bc-foot-cell .k{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--lp-text2)}
+.bc-foot-cell .v{font-size:13px;color:var(--lp-text);word-break:break-all}
+.bc-foot-cell:hover .v{color:var(--lp-accent)}
+.bc-foot-base{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-top:18px;font-size:11px;letter-spacing:1px;color:var(--lp-text2)}
+.bc-foot-base b{color:var(--lp-text);font-weight:600}
+@media(max-width:720px){
+  .bc-foot-strip{flex-direction:column}
+  .bc-foot-cell{border-left:none;border-top:1px solid var(--lp-border)}
+  .bc-foot-cell:first-child{border-top:none}
+  .bc-foot-base{justify-content:center;text-align:center}
+}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -198,17 +223,16 @@ textarea{resize:vertical;min-height:70px}
 </div>
 <script>
 // ── BOT Chain network config ──
-// ⚠️ Currently set to TESTNET. Before deploying to mainnet, change to:
-// chainId: "0x2A5", chainName: "BOT Chain", rpcUrls: ["https://rpc.botchain.ai"], blockExplorerUrls: ["https://scan.botchain.ai/"]
+// LIVE ON MAINNET. Testnet fallback, if ever needed:
+// chainId: "0x3C8", chainName: "BOT Chain Testnet", rpcUrls: ["https://rpc.bohr.life"], blockExplorerUrls: ["https://scan.bohr.life/"]
 const BOT_CHAIN = {
-  chainId: "0x3C8", // 968 in hex = BOT Chain Testnet
-  chainName: "BOT Chain Testnet",
+  chainId: "0x2A5", // 677 in hex = BOT Chain mainnet
+  chainName: "BOT Chain",
   nativeCurrency: { name: "BOT", symbol: "BOT", decimals: 18 },
-  rpcUrls: ["https://rpc.bohr.life"],
-  blockExplorerUrls: ["https://scan.bohr.life/"]
+  rpcUrls: ["https://rpc.botchain.ai"],
+  blockExplorerUrls: ["https://scan.botchain.ai/"]
 };
-// Replace with your deployed contract address after running scripts/deploy.js
-const CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000";
+const CONTRACT_ADDRESS = "0xc345F63d7a470542cC74473E071417642e6c658d";
 const ABI = [
   "function createAuction(string _title, string _desc, uint256 _minBid, uint256 _duration) external",
   "function placeBid(uint256 _auctionId) external payable",
@@ -378,5 +402,34 @@ async function cancelAuction(i){
 }
 setInterval(()=>{if(connected)renderAuctions()},1000);
 </script>
+
+<!-- ── BOT Chain ecosystem footer (KPI 5) ── -->
+<footer class="bc-foot">
+  <div class="bc-foot-inner">
+    <div class="bc-foot-eyebrow">Part of the Ecosystem</div>
+    <div class="bc-foot-mark">
+      <svg viewBox="0 0 63.63 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#00A67E" d="M31.67 99.95 L0 82.48 L0.11 63.74 L47.01 90.60 L47.01 73.19 L15.98 55.32 L15.95 36.49 L46.92 53.57 L47.39 36.82 L15.96 17.81 L16.26 0 L63.06 27.02 L62.82 46.20 L47.86 54.67 L62.85 63.00 L63.62 81.42 Z"/>
+      </svg>
+      <span class="bc-foot-word"><em>BOT</em> Chain</span>
+    </div>
+    <div class="bc-foot-motto">An EVM-compatible Layer 1 — every lot settled on-chain</div>
+    <div class="bc-foot-strip">
+      <a class="bc-foot-cell" href="https://botchain.ai" target="_blank" rel="noopener noreferrer">
+        <span class="k">Network</span><span class="v">botchain.ai</span>
+      </a>
+      <a class="bc-foot-cell" href="https://scan.botchain.ai" target="_blank" rel="noopener noreferrer">
+        <span class="k">Explorer</span><span class="v">scan.botchain.ai</span>
+      </a>
+      <a class="bc-foot-cell" href="https://scan.botchain.ai/address/0xc345F63d7a470542cC74473E071417642e6c658d" target="_blank" rel="noopener noreferrer">
+        <span class="k">Contract</span><span class="v">0xc345F6…2e6c658d</span>
+      </a>
+    </div>
+    <div class="bc-foot-base">
+      <span>&copy; 2026 <b>BOT Chain</b> — EVM-compatible Layer 1</span>
+      <span>Mainnet · Chain ID <b>677</b></span>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOT Auction House</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0c0a08;--card:#1a1610;--card2:#24201a;--border:#3d3528;--accent:#d97706;--accent2:#f59e0b;--accent-glow:rgba(217,119,6,0.12);--text:#f5f0e8;--text2:#a89b84;--green:#4ade80;--red:#f87171;--gold:#fcd34d}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.topbar{background:linear-gradient(135deg,#14110c,#201a12);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:12px;font-size:22px;font-weight:700;background:linear-gradient(135deg,var(--accent2),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;-webkit-text-fill-color:white}
+.wallet-btn{padding:10px 24px;border-radius:12px;border:1px solid var(--accent);background:var(--accent-glow);color:var(--accent2);cursor:pointer;font-size:14px;font-weight:600;transition:all .3s}
+.wallet-btn:hover{background:var(--accent);color:#fff}
+.wallet-btn.connected{border-color:var(--green);color:var(--green);background:rgba(74,222,128,0.1)}
+.container{max-width:1100px;margin:0 auto;padding:24px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--gold))}
+.stat-label{color:var(--text2);font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+.stat-value{font-size:26px;font-weight:700}
+.create-form{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:32px}
+.section-title{font-size:20px;font-weight:700;margin-bottom:20px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+label{font-size:12px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px}
+input,textarea,select{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-size:14px;width:100%;outline:none;font-family:inherit}
+input:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:70px}
+.full-width{grid-column:1/-1}
+.submit-btn{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--accent),#b45309);color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:transform .2s;margin-top:8px}
+.submit-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(217,119,6,0.3)}
+.submit-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.auctions{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px}
+.auction-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;transition:border-color .3s,transform .2s}
+.auction-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.auction-title{font-size:18px;font-weight:700;margin-bottom:8px}
+.auction-desc{color:var(--text2);font-size:13px;margin-bottom:16px;line-height:1.5}
+.auction-info{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.info-item{background:var(--card2);border-radius:10px;padding:12px;text-align:center}
+.info-label{font-size:11px;color:var(--text2);text-transform:uppercase;margin-bottom:4px}
+.info-value{font-size:16px;font-weight:700}
+.info-value.gold{color:var(--gold)}
+.info-value.green{color:var(--green)}
+.timer{text-align:center;background:linear-gradient(135deg,rgba(217,119,6,0.1),rgba(252,211,77,0.05));border:1px solid rgba(217,119,6,0.2);border-radius:10px;padding:12px;margin-bottom:16px;font-size:14px;color:var(--accent2);font-weight:600}
+.bid-row{display:flex;gap:8px;align-items:end}
+.bid-row input{flex:1}
+.bid-btn{padding:12px 24px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer;font-size:14px;white-space:nowrap;transition:all .2s}
+.bid-btn:hover{background:var(--accent2);color:#000;transform:translateY(-1px)}
+.end-btn{width:100%;padding:12px;border:none;border-radius:10px;background:var(--green);color:#000;font-weight:700;cursor:pointer;font-size:14px;margin-top:12px}
+.cancel-btn{width:100%;padding:12px;border:none;border-radius:10px;background:transparent;border:1px solid var(--red);color:var(--red);font-weight:600;cursor:pointer;font-size:13px;margin-top:8px}
+.status-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:12px}
+.badge-active{background:rgba(74,222,128,0.15);color:var(--green)}
+.badge-ended{background:rgba(168,155,132,0.15);color:var(--text2)}
+.empty{text-align:center;padding:60px;color:var(--text2);grid-column:1/-1}
+.empty .icon{font-size:48px;margin-bottom:16px}
+.toast{position:fixed;bottom:24px;right:24px;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;z-index:200;animation:si .3s}
+.toast.success{background:var(--green);color:#000}.toast.error{background:var(--red);color:#fff}
+@keyframes si{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}
+@media(max-width:768px){.stats{grid-template-columns:repeat(2,1fr)}.form-grid{grid-template-columns:1fr}.auctions{grid-template-columns:1fr}}
+
+/* ── Landing page: Editorial Auction House ── */
+:root{--lp-bg:#0f0a08;--lp-card:#1a120d;--lp-card2:#150e0a;--lp-text:#e6edf5;--lp-text2:#a89a8c;--lp-accent:#d97706;--lp-border:rgba(230,237,245,0.09)}
+.lp{background:var(--lp-bg);color:var(--lp-text);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+.lp a{text-decoration:none;color:inherit}
+.lp-serif{font-family:'Playfair Display',Georgia,'Times New Roman',serif}
+
+.lp-nav{position:sticky;top:0;z-index:150;display:flex;align-items:center;justify-content:space-between;padding:22px 48px;background:rgba(15,10,8,0.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--lp-border)}
+.lp-wordmark{font-size:20px;letter-spacing:0.5px}
+.lp-wordmark .lp-accent-word{color:var(--lp-accent)}
+.lp-enter-link{font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lp-text2);border-bottom:1px solid transparent;padding-bottom:3px;transition:color .25s,border-color .25s}
+.lp-enter-link:hover{color:var(--lp-accent);border-color:var(--lp-accent)}
+
+.lp-hero{max-width:780px;margin:0 auto;padding:110px 24px 50px;text-align:center}
+.lp-lot{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--lp-accent);margin-bottom:22px}
+.lp-hero h1{font-size:clamp(34px,5.5vw,58px);font-weight:600;line-height:1.22;margin-bottom:24px;letter-spacing:0.2px}
+.lp-hero h1 .lp-accent-word{color:var(--lp-accent);font-style:italic}
+.lp-hero p{font-size:16px;color:var(--lp-text2);max-width:520px;margin:0 auto;line-height:1.75}
+
+.lp-ticker{max-width:900px;margin:56px auto 0;padding:0 24px}
+.lp-ticker-strip{display:flex;border-top:1px solid var(--lp-border);border-bottom:1px solid var(--lp-border);overflow:hidden}
+.lp-ticker-item{flex:1;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 22px;font-size:13px;color:var(--lp-text2);border-left:1px solid var(--lp-border)}
+.lp-ticker-item:first-child{border-left:none}
+.lp-ticker-lot{color:var(--lp-text);letter-spacing:0.3px}
+.lp-ticker-amt{font-family:'Playfair Display',serif;font-style:italic;color:var(--lp-accent);font-size:14px}
+
+.lp-section{max-width:920px;margin:0 auto;padding:100px 24px}
+.lp-section-head{text-align:center;margin-bottom:64px}
+.lp-section-eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--lp-accent);margin-bottom:14px}
+.lp-section-title{font-size:32px;font-weight:600}
+
+.lp-numbered{display:flex;flex-direction:column}
+.lp-num-row{display:grid;grid-template-columns:90px 1fr;gap:28px;align-items:start;padding:36px 0;border-top:1px solid var(--lp-border)}
+.lp-numbered .lp-num-row:last-child{border-bottom:1px solid var(--lp-border)}
+.lp-num-roman{font-size:30px;color:var(--lp-accent);line-height:1}
+.lp-num-row h3{font-size:20px;font-weight:600;margin-bottom:10px}
+.lp-num-row p{font-size:15px;color:var(--lp-text2);line-height:1.7;max-width:560px}
+
+.lp-cta-banner{max-width:920px;margin:0 auto 90px;padding:70px 24px;text-align:center;border-top:1px solid var(--lp-border);border-bottom:1px solid var(--lp-border)}
+.lp-cta-banner h2{font-size:30px;font-weight:600;margin-bottom:16px}
+.lp-cta-banner p{color:var(--lp-text2);font-size:15px;margin-bottom:30px;line-height:1.7}
+.lp-cta-link{display:inline-block;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--lp-accent);border-bottom:1px solid var(--lp-accent);padding-bottom:4px;transition:opacity .2s}
+.lp-cta-link:hover{opacity:0.7}
+
+.lp-divider{display:flex;align-items:center;gap:16px;max-width:1100px;margin:0 auto;padding:0 24px 44px;color:var(--lp-text2);font-size:11px;font-weight:600;letter-spacing:2.5px}
+.lp-divider::before,.lp-divider::after{content:'';flex:1;height:1px;background:var(--lp-border)}
+
+@media(max-width:720px){
+  .lp-nav{padding:18px 24px}
+  .lp-ticker-strip{flex-direction:column}
+  .lp-ticker-item{border-left:none;border-top:1px solid var(--lp-border)}
+  .lp-ticker-item:first-child{border-top:none}
+  .lp-num-row{grid-template-columns:1fr;gap:8px}
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.9.0/ethers.umd.min.js"></script>
+
+<div class="lp">
+  <nav class="lp-nav">
+    <div class="lp-wordmark lp-serif">BOT <span class="lp-accent-word">Auction House</span></div>
+    <a class="lp-enter-link" href="#appSection">Enter Auction House</a>
+  </nav>
+
+  <section class="lp-hero">
+    <div class="lp-lot">Est. on BOT Chain</div>
+    <h1 class="lp-serif">A house of record for<br>timed, trustless bidding —<br><span class="lp-accent-word">settled on-chain</span></h1>
+    <p>Every lot runs to a hard deadline enforced by contract, every outbid offer is returned instantly, and every sale settles without an intermediary holding the funds.</p>
+  </section>
+
+  <div class="lp-ticker">
+    <div class="lp-ticker-strip">
+      <div class="lp-ticker-item"><span class="lp-ticker-lot">LOT 042 · Vintage Servo Array</span><span class="lp-ticker-amt">—</span></div>
+      <div class="lp-ticker-item"><span class="lp-ticker-lot">LOT 108 · Genesis Access Key</span><span class="lp-ticker-amt">—</span></div>
+      <div class="lp-ticker-item"><span class="lp-ticker-lot">LOT 019 · Chronoshard Fragment</span><span class="lp-ticker-amt">—</span></div>
+    </div>
+  </div>
+
+  <section class="lp-section" id="how-it-works">
+    <div class="lp-section-head">
+      <div class="lp-section-eyebrow">The Process</div>
+      <div class="lp-section-title lp-serif">How a lot changes hands</div>
+    </div>
+    <div class="lp-numbered">
+      <div class="lp-num-row">
+        <div class="lp-num-roman lp-serif">I</div>
+        <div><h3>Bidding</h3><p>A lot is listed with a minimum bid and a fixed close time. Each bid is placed directly against the contract, and every bidder who is outbid is refunded the moment a higher offer lands — automatically, with nothing to claim.</p></div>
+      </div>
+      <div class="lp-num-row">
+        <div class="lp-num-roman lp-serif">II</div>
+        <div><h3>Settlement</h3><p>When the clock reaches zero, the auction is closed permanently. No extensions, no late offers, no discretion — the highest bid standing at the deadline wins the lot.</p></div>
+      </div>
+      <div class="lp-num-row">
+        <div class="lp-num-roman lp-serif">III</div>
+        <div><h3>Escrow Release</h3><p>The winning bid is released to the seller and the lot is recorded to the winner in a single transaction — funds never sit with a custodian at any point in the process.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="lp-cta-banner">
+    <h2 class="lp-serif">The house is open.</h2>
+    <p>Connect your wallet to browse current lots or list one of your own.</p>
+    <a class="lp-cta-link" href="#appSection">Enter Auction House</a>
+  </div>
+
+  <div class="lp-divider">LIVE APPLICATION</div>
+</div>
+
+<div id="appSection">
+<div class="topbar">
+  <div class="logo"><div class="logo-icon">🏛️</div>BOT Auction House</div>
+  <button class="wallet-btn" id="walletBtn" onclick="connectWallet()">Connect Wallet</button>
+</div>
+<div class="container">
+  <div class="stats">
+    <div class="stat-card"><div class="stat-label">Live Auctions</div><div class="stat-value" id="liveCount">—</div></div>
+    <div class="stat-card"><div class="stat-label">Total Auctions</div><div class="stat-value" id="totalCount">—</div></div>
+    <div class="stat-card"><div class="stat-label">Volume Traded</div><div class="stat-value" id="volume">— BOT</div></div>
+    <div class="stat-card"><div class="stat-label">Your Balance</div><div class="stat-value" id="balance">— BOT</div></div>
+  </div>
+  <div class="section-title">🆕 Create Auction</div>
+  <div class="create-form">
+    <div class="form-grid">
+      <div><label>Item Title</label><input id="aTitle" placeholder="e.g. Rare Digital Collectible"></div>
+      <div><label>Min Bid (BOT)</label><input id="aMinBid" type="number" step="0.01" placeholder="0.1"></div>
+      <div class="full-width"><label>Description</label><textarea id="aDesc" placeholder="Describe the item..."></textarea></div>
+      <div><label>Duration</label><select id="aDur"><option value="3600">1 Hour</option><option value="86400" selected>1 Day</option><option value="259200">3 Days</option><option value="604800">1 Week</option></select></div>
+    </div>
+    <button class="submit-btn" id="createBtn" onclick="createAuction()" disabled>Create Auction</button>
+  </div>
+  <div class="section-title">🏛️ Auctions</div>
+  <div class="auctions" id="auctionsList"></div>
+</div>
+</div>
+<script>
+// ── BOT Chain network config ──
+// ⚠️ Currently set to TESTNET. Before deploying to mainnet, change to:
+// chainId: "0x2A5", chainName: "BOT Chain", rpcUrls: ["https://rpc.botchain.ai"], blockExplorerUrls: ["https://scan.botchain.ai/"]
+const BOT_CHAIN = {
+  chainId: "0x3C8", // 968 in hex = BOT Chain Testnet
+  chainName: "BOT Chain Testnet",
+  nativeCurrency: { name: "BOT", symbol: "BOT", decimals: 18 },
+  rpcUrls: ["https://rpc.bohr.life"],
+  blockExplorerUrls: ["https://scan.bohr.life/"]
+};
+// Replace with your deployed contract address after running scripts/deploy.js
+const CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000";
+const ABI = [
+  "function createAuction(string _title, string _desc, uint256 _minBid, uint256 _duration) external",
+  "function placeBid(uint256 _auctionId) external payable",
+  "function endAuction(uint256 _auctionId) external",
+  "function withdrawBid(uint256 _auctionId) external",
+  "function cancelAuction(uint256 _auctionId) external",
+  "function getAuction(uint256 _id) external view returns (tuple(address seller,string title,string description,uint256 minBid,uint256 highestBid,address highestBidder,uint256 endTime,uint8 status,uint256 createdAt))",
+  "function getAuctionCount() external view returns (uint256)",
+  "function totalAuctions() external view returns (uint256)",
+  "function totalVolume() external view returns (uint256)"
+];
+
+let connected=false,account=null,auctions=[];
+let provider=null,signer=null,contract=null;
+
+function toast(msg,t='success'){const e=document.createElement('div');e.className='toast '+t;e.textContent=msg;document.body.appendChild(e);setTimeout(()=>e.remove(),3000)}
+
+function connectWallet(){
+  if(connected){disconnectWallet();return}
+  connectLive();
+}
+
+function disconnectWallet(){
+  connected=false;account=null;provider=null;signer=null;contract=null;
+  document.getElementById('walletBtn').textContent='Connect Wallet';
+  document.getElementById('walletBtn').classList.remove('connected');
+  document.getElementById('createBtn').disabled=true;
+  auctions=[];updateUI();
+}
+
+// ── Live Blockchain Connect (MetaMask) ──
+async function connectLive(){
+  if(typeof window.ethereum === 'undefined'){
+    toast('MetaMask not found. Please install a Web3 wallet to connect.','error');
+    return;
+  }
+  try{
+    try{
+      await window.ethereum.request({ method:'wallet_switchEthereumChain', params:[{ chainId: BOT_CHAIN.chainId }] });
+    }catch(switchErr){
+      if(switchErr.code === 4902){
+        await window.ethereum.request({ method:'wallet_addEthereumChain', params:[BOT_CHAIN] });
+      } else if (switchErr.code === 4001){
+        toast('Network switch rejected','error'); return;
+      }
+    }
+    provider = new ethers.BrowserProvider(window.ethereum);
+    await window.ethereum.request({ method:'eth_requestAccounts' });
+    signer = await provider.getSigner();
+    account = await signer.getAddress();
+    contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+    connected = true;
+    document.getElementById('walletBtn').textContent = account.slice(0,6)+'...'+account.slice(-4);
+    document.getElementById('walletBtn').classList.add('connected');
+    document.getElementById('createBtn').disabled=false;
+    if(CONTRACT_ADDRESS==='0x0000000000000000000000000000000000000000'){
+      toast('Wallet connected! Deploy the contract and set CONTRACT_ADDRESS to enable on-chain actions.','success');
+    } else {
+      await loadLiveAuctions();
+      toast('Connected to BOT Chain!');
+    }
+    const bal = await provider.getBalance(account);
+    document.getElementById('balance').textContent = parseFloat(ethers.formatEther(bal)).toFixed(4)+' BOT';
+    updateUI();
+  }catch(e){
+    toast('Connection failed: '+(e.message||e),'error');
+  }
+}
+
+async function loadLiveAuctions(){
+  if(!contract || CONTRACT_ADDRESS==='0x0000000000000000000000000000000000000000') return;
+  try{
+    const count = await contract.getAuctionCount();
+    auctions=[];
+    for(let i=0;i<count;i++){
+      const a = await contract.getAuction(i);
+      auctions.push({seller:a.seller,title:a.title,description:a.description,minBid:parseFloat(ethers.formatEther(a.minBid)),highestBid:parseFloat(ethers.formatEther(a.highestBid)),highestBidder:a.highestBidder,endTime:Number(a.endTime)*1000,status:Number(a.status)});
+    }
+    updateUI();
+  }catch(e){ toast('Failed to load auctions: '+e.message,'error'); }
+}
+
+if(typeof window!=='undefined' && window.ethereum){
+  window.ethereum.on && window.ethereum.on('accountsChanged',()=>{ disconnectWallet(); });
+  window.ethereum.on && window.ethereum.on('chainChanged',()=>{ window.location.reload(); });
+}
+function fmtTime(ms){if(ms<=0)return'Ended';const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);return`${h}h ${m}m ${s}s`}
+function updateUI(){
+  const deployed = CONTRACT_ADDRESS!=='0x0000000000000000000000000000000000000000';
+  if(!deployed){
+    document.getElementById('liveCount').textContent='—';
+    document.getElementById('totalCount').textContent='—';
+    document.getElementById('volume').textContent='—';
+    if(!connected) document.getElementById('balance').textContent='— BOT';
+  } else {
+    const live=auctions.filter(a=>a.status===0).length;
+    const vol=auctions.filter(a=>a.status===1).reduce((s,a)=>s+a.highestBid,0);
+    document.getElementById('liveCount').textContent=live;
+    document.getElementById('totalCount').textContent=auctions.length;
+    document.getElementById('volume').textContent=vol.toFixed(2)+' BOT';
+  }
+  renderAuctions();
+}
+function renderAuctions(){
+  const el=document.getElementById('auctionsList');
+  const deployed = CONTRACT_ADDRESS!=='0x0000000000000000000000000000000000000000';
+  if(!connected){el.innerHTML='<div class="empty"><div class="icon">🏛️</div>Connect wallet to browse</div>';return}
+  if(!deployed){el.innerHTML='<div class="empty"><div class="icon">🏛️</div>Deploy contract to see live auctions</div>';return}
+  if(!auctions.length){el.innerHTML='<div class="empty"><div class="icon">🏛️</div>No auctions yet</div>';return}
+  el.innerHTML=auctions.map((a,i)=>{
+    const isActive=a.status===0;const remaining=a.endTime-Date.now();const canEnd=isActive&&remaining<=0;
+    return `<div class="auction-card">
+      <span class="status-badge ${isActive?'badge-active':'badge-ended'}">${isActive?(canEnd?'Ending...':'Live'):'Ended'}</span>
+      <div class="auction-title">${a.title}</div>
+      <div class="auction-desc">${a.description}</div>
+      <div class="auction-info">
+        <div class="info-item"><div class="info-label">Min Bid</div><div class="info-value">${a.minBid} BOT</div></div>
+        <div class="info-item"><div class="info-label">Highest Bid</div><div class="info-value gold">${a.highestBid>0?a.highestBid.toFixed(2)+' BOT':'No bids'}</div></div>
+      </div>
+      ${isActive&&!canEnd?`<div class="timer">⏱️ ${fmtTime(remaining)} remaining</div>`:''}
+      ${a.highestBidder?`<div style="font-size:12px;color:var(--text2);margin-bottom:12px">Top bidder: ${a.highestBidder}</div>`:''}
+      ${isActive&&!canEnd&&a.seller!==account?`<div class="bid-row"><input id="bid${i}" type="number" step="0.01" placeholder="Your bid" min="${Math.max(a.minBid,a.highestBid+0.01).toFixed(2)}"><button class="bid-btn" onclick="placeBid(${i})">Place Bid</button></div>`:''}
+      ${canEnd?`<button class="end-btn" onclick="endAuction(${i})">End Auction & Settle</button>`:''}
+      ${isActive&&!a.highestBidder&&a.seller===account?`<button class="cancel-btn" onclick="cancelAuction(${i})">Cancel Auction</button>`:''}
+      ${a.status===1&&a.highestBidder?`<div style="text-align:center;padding:12px;background:rgba(74,222,128,0.08);border-radius:10px;margin-top:8px;color:var(--green);font-weight:600">Winner: ${a.highestBidder}</div>`:''}
+    </div>`}).join('');
+}
+async function createAuction(){
+  const title=document.getElementById('aTitle').value,desc=document.getElementById('aDesc').value,min=parseFloat(document.getElementById('aMinBid').value),dur=parseInt(document.getElementById('aDur').value);
+  if(!title||!min){toast('Fill title and min bid','error');return}
+  if(!contract||CONTRACT_ADDRESS==='0x0000000000000000000000000000000000000000'){toast('Contract not deployed yet','error');return}
+  try{
+    toast('Confirm in MetaMask...');
+    const tx=await contract.createAuction(title,desc||'No description',ethers.parseEther(min.toString()),dur);
+    await tx.wait();
+    document.getElementById('aTitle').value='';document.getElementById('aDesc').value='';document.getElementById('aMinBid').value='';
+    await loadLiveAuctions();toast('Auction created on-chain!');
+  }catch(e){toast('Transaction failed: '+(e.reason||e.message),'error')}
+}
+async function placeBid(i){
+  const amt=parseFloat(document.getElementById('bid'+i).value);const a=auctions[i];
+  if(!amt||amt<a.minBid){toast('Bid must be >= min bid','error');return}
+  if(amt<=a.highestBid){toast('Must outbid current highest','error');return}
+  if(!contract){toast('Contract not deployed yet','error');return}
+  try{
+    toast('Confirm in MetaMask...');
+    const tx=await contract.placeBid(i,{value:ethers.parseEther(amt.toString())});
+    await tx.wait();
+    await loadLiveAuctions();toast(`Bid ${amt} BOT placed on-chain!`);
+  }catch(e){toast('Transaction failed: '+(e.reason||e.message),'error')}
+}
+async function endAuction(i){
+  if(!contract){toast('Contract not deployed yet','error');return}
+  try{
+    toast('Confirm in MetaMask...');
+    const tx=await contract.endAuction(i);await tx.wait();
+    await loadLiveAuctions();toast('Auction ended on-chain!');
+  }catch(e){toast('Transaction failed: '+(e.reason||e.message),'error')}
+}
+async function cancelAuction(i){
+  if(!contract){toast('Contract not deployed yet','error');return}
+  try{
+    toast('Confirm in MetaMask...');
+    const tx=await contract.cancelAuction(i);await tx.wait();
+    await loadLiveAuctions();toast('Auction cancelled on-chain!');
+  }catch(e){toast('Transaction failed: '+(e.reason||e.message),'error')}
+}
+setInterval(()=>{if(connected)renderAuctions()},1000);
+</script>
+</body>
+</html>
